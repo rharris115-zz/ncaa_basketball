@@ -1,9 +1,9 @@
 from ncaa_predict.data.access import mens_access
-from ncaa_predict.data.processed import team_results_df
+from ncaa_predict.data.processed import regular_season_compact_team_results_df
 
 
 def main():
-    df = team_results_df(access=mens_access)
+    df = regular_season_compact_team_results_df(access=mens_access)
     print(df)
 
 

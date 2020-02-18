@@ -2,17 +2,16 @@ from .access import DataAccess
 import pandas as pd
 
 
-def team_results_df(access: DataAccess) -> pd.DataFrame:
+def regular_season_compact_team_results_df(access: DataAccess) -> pd.DataFrame:
+    return _compact_team_results_df(access=access, compact_results_df=access.regular_season_compact_results_df())
+
+
+def tourney_season_compact_team_results_df(access: DataAccess) -> pd.DataFrame:
+    return _compact_team_results_df(access=access, compact_results_df=access.tourney_compact_results_df())
+
+
+def _compact_team_results_df(access: DataAccess, compact_results_df: pd.DataFrame) -> pd.DataFrame:
     # Season, DayNum, WTeamID, WScore, LTeamID, LScore, WLoc, NumOT
-    regular_season_compact_results_df = access.regular_season_compact_results_df()
-    tourney_compact_results_df = access.tourney_compact_results_df()
-
-    regular_season_compact_results_df['playoff'] = False
-    tourney_compact_results_df['playoff'] = True
-
-    compact_results_df = regular_season_compact_results_df \
-        .append(tourney_compact_results_df)
-
     winning_team_results_df = compact_results_df \
         .rename(columns={'WTeamID': 'TeamID',
                          'WScore': 'Score',
