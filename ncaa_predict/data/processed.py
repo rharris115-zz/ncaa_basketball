@@ -35,6 +35,9 @@ def team_results_df(access: DataAccess) -> pd.DataFrame:
     _team_results_df['TeamName'] = _team_results_df.TeamID.transform(lambda x: teams.get(x, ''))
     _team_results_df['OtherTeamName'] = _team_results_df.OtherTeamID.transform(lambda x: teams.get(x, ''))
 
+    _team_results_df = _team_results_df[['Season', 'DayNum', 'TeamName', 'TeamID', 'Score',
+                                         'OtherTeamName', 'OtherTeamID', 'OtherScore', 'Loc', 'NumOT']]
+
     _team_results_df.set_index(['TeamID', 'Season', 'DayNum'], inplace=True)
     _team_results_df.sort_index(inplace=True)
 
