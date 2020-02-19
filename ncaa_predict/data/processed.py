@@ -1,13 +1,18 @@
 from .access import DataAccess
+from ..utils import memoize
 import pandas as pd
 
 
+@memoize
 def regular_season_compact_team_results_df(access: DataAccess) -> pd.DataFrame:
-    return _compact_team_results_df(access=access, compact_results_df=access.regular_season_compact_results_df())
+    compact_results_df = access.regular_season_compact_results_df()
+    return _compact_team_results_df(access=access, compact_results_df=compact_results_df)
 
 
+@memoize
 def tourney_season_compact_team_results_df(access: DataAccess) -> pd.DataFrame:
-    return _compact_team_results_df(access=access, compact_results_df=access.tourney_compact_results_df())
+    compact_results_df = access.tourney_compact_results_df()
+    return _compact_team_results_df(access=access, compact_results_df=compact_results_df)
 
 
 def _compact_team_results_df(access: DataAccess, compact_results_df: pd.DataFrame) -> pd.DataFrame:

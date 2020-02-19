@@ -1,10 +1,10 @@
-from ncaa_predict.data.access import mens_access
-from ncaa_predict.data.processed import regular_season_compact_team_results_df
-from ncaa_predict.features import mens_features, womens_features
+from ncaa_predict.data.access import mens_access, womens_access
+from ncaa_predict.features import registry
 
 
 def main():
-    features_results = mens_features.run()
+    features_results = registry.run(access=womens_access)
+    features_results = registry.run(access=womens_access)
     print(features_results)
 
 

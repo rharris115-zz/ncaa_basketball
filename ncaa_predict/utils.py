@@ -1,12 +1,9 @@
-from typing import Callable
-
-
-def memoize(f: Callable):
+def memoize(f):
     memo = {}
 
-    def _f(x):
+    def helper(x):
         if x not in memo:
             memo[x] = f(x)
         return memo[x]
 
-    return _f
+    return helper
