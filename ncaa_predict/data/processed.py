@@ -15,6 +15,20 @@ def tourney_season_compact_team_results_df(access: DataAccess) -> pd.DataFrame:
     return _compact_team_results_df(access=access, compact_results_df=compact_results_df)
 
 
+@memoize
+def compact_team_results_df(access: DataAccess) -> pd.DataFrame:
+    _regular_season_compact_team_results_df = regular_season_compact_team_results_df(access).copy()
+    _tourney_season_compact_team_results_df = tourney_season_compact_team_results_df(access).copy()
+
+    _regular_season_compact_team_results_df['Tourney'] = False
+    _tourney_season_compact_team_results_df['Tourney'] = True
+
+    _compact_team_results_df = _regular_season_compact_team_results_df \
+        .append(_tourney_season_compact_team_results_df)
+    _compact_team_results_df.sort_index(inplace=True)
+    return _compact_team_results_df
+
+
 def _compact_team_results_df(access: DataAccess, compact_results_df: pd.DataFrame) -> pd.DataFrame:
     # Season, DayNum, WTeamID, WScore, LTeamID, LScore, WLoc, NumOT
     winning_team_results_df = compact_results_df \
