@@ -8,6 +8,7 @@ class Features():
 
     def register(self, f: Callable):
         self.features[f.__name__] = f
+        return f
 
     def run(self, access: DataAccess):
         return {name: f(access) for name, f in self.features.items()}
