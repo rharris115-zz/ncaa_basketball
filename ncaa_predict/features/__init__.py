@@ -1,5 +1,5 @@
 from typing import Callable, Dict
-from ..data.access import DataAccess, mens_access, womens_access
+from ..data.access import DataAccess
 
 
 class Features():
@@ -17,3 +17,4 @@ class Features():
 registry = Features()
 
 from . import simple
+from . import elo
