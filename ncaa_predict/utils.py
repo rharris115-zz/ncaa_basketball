@@ -1,15 +1,12 @@
-def memoize(f):
+from typing import Callable
+
+
+def memoize(f: Callable):
     memo = {}
 
-    def helper(x):
+    def _f(x):
         if x not in memo:
             memo[x] = f(x)
         return memo[x]
 
-    return helper
-
-
-class Registry():
-
-    def __init__(self):
-        pass
+    return _f
