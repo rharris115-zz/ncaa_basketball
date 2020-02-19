@@ -30,6 +30,15 @@ def streak(access: DataAccess) -> pd.Series:
 
 
 @registry.register
+def home_advantage(access: DataAccess) -> pd.Series:
+    ctr_df = regular_season_compact_team_results_df(access).copy()
+    ctr_df.loc[ctr_df.Loc == 'H', 'HomeAdvantage'] = 1
+    ctr_df.loc[ctr_df.Loc == 'N', 'HomeAdvantage'] = 0
+    ctr_df.loc[ctr_df.Loc == 'A', 'HomeAdvantage'] = -1
+    return ctr_df.HomeAdvantage
+
+
+@registry.register
 @memoize
 def rest_days(access: DataAccess) -> pd.Series:
     ctr_df = regular_season_compact_team_results_df(access).reset_index()
