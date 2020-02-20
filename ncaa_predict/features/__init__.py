@@ -16,5 +16,5 @@ class Features():
 
 registry = Features()
 
-from . import simple
 from . import elo
+from . import simple
