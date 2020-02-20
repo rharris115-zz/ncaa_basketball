@@ -68,4 +68,4 @@ def elo(access: DataAccess) -> pd.DataFrame:
     _all_season_compact_results_df.set_index(['Season', 'DayNum', 'WTeamID', 'LTeamID'], inplace=True)
     _all_season_compact_results_df.sort_index(inplace=True)
 
-    return _all_season_compact_results_df[['WEloAfter', 'LEloAfter']]
+    return _all_season_compact_results_df[['WElo', 'LElo']]
