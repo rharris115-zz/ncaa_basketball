@@ -12,8 +12,8 @@ def elo(access: DataAccess) -> pd.DataFrame:
     # https://fivethirtyeight.com/features/how-we-calculate-nba-elo-ratings/
     # https://www.ergosum.co/nate-silvers-nba-elo-algorithm/
 
-    _all_season_compact_results_df = all_season_compact_results_df(access).copy()
-    w_elo, l_elo, w_elo_after, l_elo_after = [], [], [], []
+    _all_season_compact_results_df = all_season_compact_results_df(access).reset_index()
+    w_elo, l_elo = [], []
     team_elo = {}  # type: Dict[int,float]
 
     team_conferences_df = access.team_conferences_df()
@@ -59,14 +59,13 @@ def elo(access: DataAccess) -> pd.DataFrame:
             team_elo[row.WTeamID] = r_w_new
             team_elo[row.LTeamID] = r_l_new
 
-            w_elo.append(r_w)
-            l_elo.append(r_l)
-            w_elo_after.append(r_w_new)
-            l_elo_after.append(r_l_new)
+            w_elo.append(r_w_new)
+            l_elo.append(r_l_new)
 
     _all_season_compact_results_df['WElo'] = w_elo
     _all_season_compact_results_df['LElo'] = l_elo
-    _all_season_compact_results_df['WEloAfter'] = w_elo_after
-    _all_season_compact_results_df['LEloAfter'] = l_elo_after
 
-    return _all_season_compact_results_df
+    _all_season_compact_results_df.set_index(['Season', 'DayNum', 'WTeamID', 'LTeamID'], inplace=True)
+    _all_season_compact_results_df.sort_index(inplace=True)
+
+    return _all_season_compact_results_df[['WEloAfter', 'LEloAfter']]
