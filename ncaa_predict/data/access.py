@@ -98,7 +98,7 @@ class DataAccess():
         return self._read(name=f'{self.prefix}Players.csv')
 
     @memoize
-    def sampe_submission_stage_1(self):
+    def sample_submission_stage_1(self):
         # ID, Pred
         return self._read(name=f'{self.prefix}SampleSubmissionStage1_2020.csv')
 

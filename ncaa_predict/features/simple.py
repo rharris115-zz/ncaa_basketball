@@ -1,19 +1,25 @@
 from . import registry
 from ..data.access import DataAccess
-from ..data.processed import regular_season_compact_team_results_df, team_format_indices
+from ..data.processed import all_compact_team_results_df, team_format_indices
 import pandas as pd
 from ..utils import memoize
 
 
 @registry.register
+def is_tourney(access: DataAccess) -> pd.Series:
+    ctr_df = all_compact_team_results_df(access)
+    return ctr_df.Tourney.rename('Tourney')
+
+
+@registry.register
 def score_difference(access: DataAccess) -> pd.Series:
-    ctr_df = regular_season_compact_team_results_df(access)
+    ctr_df = all_compact_team_results_df(access)
     return (ctr_df.Score - ctr_df.OtherScore).rename('ScoreDifference')
 
 
 @registry.register
 def win(access: DataAccess) -> pd.Series:
-    ctr_df = regular_season_compact_team_results_df(access)
+    ctr_df = all_compact_team_results_df(access)
     return (((ctr_df.Score > ctr_df.OtherScore).astype(int) * 2) - 1).rename('Win')
 
 
@@ -33,7 +39,7 @@ def streak(access: DataAccess) -> pd.Series:
 
 @registry.register
 def home_advantage(access: DataAccess) -> pd.Series:
-    ctr_df = regular_season_compact_team_results_df(access).copy()
+    ctr_df = all_compact_team_results_df(access).copy()
     ctr_df.loc[ctr_df.Loc == 'H', 'HomeAdvantage'] = 1
     ctr_df.loc[ctr_df.Loc == 'N', 'HomeAdvantage'] = 0
     ctr_df.loc[ctr_df.Loc == 'A', 'HomeAdvantage'] = -1
@@ -43,7 +49,7 @@ def home_advantage(access: DataAccess) -> pd.Series:
 @registry.register
 @memoize
 def rest_days(access: DataAccess) -> pd.Series:
-    ctr_df = regular_season_compact_team_results_df(access).reset_index()
+    ctr_df = all_compact_team_results_df(access).reset_index()
     first_season = min(ctr_df.Season)
     ctr_df['OverallDayNum'] = ((ctr_df.Season - first_season) * 365) + ctr_df.DayNum
     ctr_df.set_index(team_format_indices, inplace=True)

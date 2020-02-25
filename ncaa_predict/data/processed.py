@@ -20,7 +20,7 @@ def tourney_season_compact_team_results_df(access: DataAccess) -> pd.DataFrame:
 
 
 @memoize
-def all_team_results_df(access: DataAccess) -> pd.DataFrame:
+def all_compact_team_results_df(access: DataAccess) -> pd.DataFrame:
     _regular_season_compact_team_results_df = regular_season_compact_team_results_df(access).copy()
     _tourney_season_compact_team_results_df = tourney_season_compact_team_results_df(access).copy()
 
@@ -119,8 +119,10 @@ def to_team_format(game_formatted_df: pd.DataFrame) -> pd.DataFrame:
     return team_formatted_df
 
 
-def possible_games(seeds_df: pd.DataFrame) -> Iterable[Tuple[int, int, int]]:
+@memoize
+def possible_games(access: DataAccess) -> Iterable[Tuple[int, int, int]]:
     # Season, Seed, TeamID
+    seeds_df = access.tourney_seeds_df()
     for season, season_seeds_df in seeds_df.groupby('Season'):
         teams = season_seeds_df.TeamID.unique().tolist()
         for ta in teams:
