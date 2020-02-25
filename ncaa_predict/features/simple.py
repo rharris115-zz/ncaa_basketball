@@ -26,6 +26,8 @@ def streak(access: DataAccess) -> pd.Series:
                             | (_win_df.TeamID != _shifted_win_df.TeamID)
                             | (_win_df.Season != _shifted_win_df.Season)).cumsum()
     _win_df['Streak'] = _win_df.groupby('StreamNum').Win.cumsum()
+    _win_df.set_index(['TeamID', 'Season', 'DayNum'], inplace=True)
+    _win_df.sort_index(inplace=True)
     return _win_df.Streak
 
 

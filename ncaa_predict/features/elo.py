@@ -10,11 +10,15 @@ r_0 = 1300
 
 
 @registry.register
-def elo(access: DataAccess) -> pd.DataFrame:
+def elo(access: DataAccess) -> pd.Series:
     # https://fivethirtyeight.com/features/how-we-calculate-nba-elo-ratings/
     # https://www.ergosum.co/nate-silvers-nba-elo-algorithm/
 
     _all_season_compact_results_df = all_season_compact_results_df(access).reset_index()
+
+    print('all season duplicates')
+    print(_all_season_compact_results_df[_all_season_compact_results_df.index.duplicated()])
+
     w_elo, l_elo = [], []
     team_elo = {}  # type: Dict[int,float]
 
@@ -74,4 +78,8 @@ def elo(access: DataAccess) -> pd.DataFrame:
     _elo_game_formatted_df['LElo'] = l_elo
 
     _elo_df = to_team_format(game_formatted_df=_elo_game_formatted_df)
-    return _elo_df
+
+    print('elo duplicates')
+    print(_elo_df[_elo_df.index.duplicated(keep=False)])
+
+    return _elo_df.Elo

@@ -1,6 +1,6 @@
 from .access import DataAccess
 from ..utils import memoize
-from typing import Dict
+from typing import Dict, Iterable, Tuple, List, Any
 import pandas as pd
 
 
@@ -114,3 +114,13 @@ def to_team_format(game_formatted_df: pd.DataFrame) -> pd.DataFrame:
     team_formatted_df.sort_index(inplace=True)
 
     return team_formatted_df
+
+
+def possible_games(seeds_df: pd.DataFrame) -> Iterable[Tuple[int, int, int]]:
+    # Season, Seed, TeamID
+    for season, season_seeds_df in seeds_df.groupby('Season'):
+        teams = season_seeds_df.TeamID.unique().tolist()
+        for ta in teams:
+            for tb in teams:
+                if ta < tb:
+                    yield season, ta, tb

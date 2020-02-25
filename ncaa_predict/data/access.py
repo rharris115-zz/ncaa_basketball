@@ -97,6 +97,11 @@ class DataAccess():
         # PlayerID, LastName, FirstName, TeamID
         return self._read(name=f'{self.prefix}Players.csv')
 
+    @memoize
+    def sampe_submission_stage_1(self):
+        # ID, Pred
+        return self._read(name=f'{self.prefix}SampleSubmissionStage1_2020.csv')
+
 
 mens_access = DataAccess(zip_file='google-cloud-ncaa-march-madness-2020-division-1-mens-tournament.zip',
                          prefix='M')
