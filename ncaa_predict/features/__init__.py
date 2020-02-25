@@ -1,5 +1,6 @@
 from typing import Callable, Dict
 from ..data.access import DataAccess
+from tqdm import tqdm
 
 
 class Features():
@@ -11,7 +12,8 @@ class Features():
         return f
 
     def run(self, access: DataAccess):
-        return {name: f(access) for name, f in self.features.items()}
+        return {name: f(access) for name, f in
+                tqdm(iterable=self.features.items(), desc='Computing Features', leave=True)}
 
 
 registry = Features()

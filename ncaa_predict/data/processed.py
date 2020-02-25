@@ -75,32 +75,42 @@ def _compact_results_with_team_names_df(team_names_by_id: Dict[int, str],
 
 def _compact_team_results_df(compact_results_with_team_names_df: pd.DataFrame) -> pd.DataFrame:
     # Season, DayNum, WTeamID, WTeamName, WScore, LTeamID, LTeamName, LScore, WLoc, NumOT
-    compact_results_with_team_names_df = compact_results_with_team_names_df.reset_index()
-    winning_team_results_df = compact_results_with_team_names_df \
-        .rename(columns={'WTeamID': 'TeamID',
-                         'WTeamName': 'TeamName',
-                         'WScore': 'Score',
-                         'LTeamID': 'OtherTeamID',
-                         'LTeamName': 'OtherTeamName',
-                         'LScore': 'OtherScore',
-                         'WLoc': 'Loc'})
-    losing_team_results_df = compact_results_with_team_names_df \
-        .rename(columns={'WTeamID': 'OtherTeamID',
-                         'WTeamName': 'OtherTeamName',
-                         'WScore': 'OtherScore',
-                         'LTeamID': 'TeamID',
-                         'LTeamName': 'TeamName',
-                         'LScore': 'Score',
-                         'WLoc': 'Loc'})
-    losing_team_results_df.Loc = losing_team_results_df.Loc.transform(
-        lambda x: 'H' if x == 'A' else 'A' if x == 'H' else x)
+    return to_team_format(game_formatted_df=compact_results_with_team_names_df)
 
-    _team_results_df = winning_team_results_df.append(losing_team_results_df)
 
-    _team_results_df = _team_results_df[['Season', 'DayNum', 'TeamName', 'TeamID', 'Score',
-                                         'OtherTeamName', 'OtherTeamID', 'OtherScore', 'Loc', 'NumOT']]
+def _winning_column_renamer(column: str) -> str:
+    if column.startswith('W'):
+        return column[1:]
+    elif column.startswith('L'):
+        return 'Other' + column[1:]
+    else:
+        return column
 
-    _team_results_df.set_index(['TeamID', 'Season', 'DayNum'], inplace=True)
-    _team_results_df.sort_index(inplace=True)
 
-    return _team_results_df
+def _losing_column_ranamer(column: str) -> str:
+    if column.startswith('L'):
+        return column[1:]
+    elif column.startswith('W'):
+        return 'Other' + column[1:]
+    else:
+        return column
+
+
+def to_team_format(game_formatted_df: pd.DataFrame) -> pd.DataFrame:
+    winning_game_formatted_df = game_formatted_df.reset_index()
+    winning_game_formatted_df.rename(columns=_winning_column_renamer, inplace=True)
+
+    losing_game_formatted_df = game_formatted_df.reset_index()
+    losing_game_formatted_df.rename(columns=_losing_column_ranamer, inplace=True)
+
+    if 'OtherLoc' in losing_game_formatted_df.columns:
+        losing_game_formatted_df['Loc'] = losing_game_formatted_df.OtherLoc \
+            .transform(lambda x: 'H' if x == 'A' else 'A' if x == 'H' else x)
+        losing_game_formatted_df.drop(columns='OtherLoc', inplace=True)
+
+    team_formatted_df = winning_game_formatted_df.append(losing_game_formatted_df)
+
+    team_formatted_df.set_index(['TeamID', 'Season', 'DayNum'], inplace=True)
+    team_formatted_df.sort_index(inplace=True)
+
+    return team_formatted_df
