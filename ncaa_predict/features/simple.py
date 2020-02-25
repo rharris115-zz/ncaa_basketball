@@ -1,6 +1,6 @@
 from . import registry
 from ..data.access import DataAccess
-from ..data.processed import regular_season_compact_team_results_df
+from ..data.processed import regular_season_compact_team_results_df, team_format_indices
 import pandas as pd
 from ..utils import memoize
 
@@ -26,7 +26,7 @@ def streak(access: DataAccess) -> pd.Series:
                             | (_win_df.TeamID != _shifted_win_df.TeamID)
                             | (_win_df.Season != _shifted_win_df.Season)).cumsum()
     _win_df['Streak'] = _win_df.groupby('StreamNum').Win.cumsum()
-    _win_df.set_index(['TeamID', 'Season', 'DayNum'], inplace=True)
+    _win_df.set_index(team_format_indices, inplace=True)
     _win_df.sort_index(inplace=True)
     return _win_df.Streak
 
@@ -46,7 +46,7 @@ def rest_days(access: DataAccess) -> pd.Series:
     ctr_df = regular_season_compact_team_results_df(access).reset_index()
     first_season = min(ctr_df.Season)
     ctr_df['OverallDayNum'] = ((ctr_df.Season - first_season) * 365) + ctr_df.DayNum
-    ctr_df.set_index(['TeamID', 'Season', 'DayNum'], inplace=True)
+    ctr_df.set_index(team_format_indices, inplace=True)
     ctr_df.sort_index(inplace=True)
     ctr_df['RestDays'] = ctr_df.groupby('TeamID').OverallDayNum.diff()
     return ctr_df.RestDays

@@ -3,6 +3,9 @@ from ..utils import memoize
 from typing import Dict, Iterable, Tuple, List, Any
 import pandas as pd
 
+team_format_indices = ['TeamID', 'Season', 'DayNum', 'OtherTeamID']
+game_format_indices = ['Season', 'DayNum', 'WTeamID', 'LTeamID']
+
 
 @memoize
 def regular_season_compact_team_results_df(access: DataAccess) -> pd.DataFrame:
@@ -68,7 +71,7 @@ def _compact_results_with_team_names_df(team_names_by_id: Dict[int, str],
     compact_results_with_team_names_df['LTeamName'] = compact_results_with_team_names_df.LTeamID \
         .transform(lambda x: team_names_by_id.get(x, ''))
 
-    compact_results_with_team_names_df.set_index(['Season', 'DayNum', 'WTeamID', 'LTeamID'], inplace=True)
+    compact_results_with_team_names_df.set_index(game_format_indices, inplace=True)
     compact_results_with_team_names_df.sort_index(inplace=True)
     return compact_results_with_team_names_df
 
@@ -110,7 +113,7 @@ def to_team_format(game_formatted_df: pd.DataFrame) -> pd.DataFrame:
 
     team_formatted_df = winning_game_formatted_df.append(losing_game_formatted_df)
 
-    team_formatted_df.set_index(['TeamID', 'Season', 'DayNum'], inplace=True)
+    team_formatted_df.set_index(team_format_indices, inplace=True)
     team_formatted_df.sort_index(inplace=True)
 
     return team_formatted_df
