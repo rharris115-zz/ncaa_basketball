@@ -24,7 +24,8 @@ def elo(access: DataAccess) -> pd.Series:
     teams_by_season_and_conference = team_conferences_df.groupby('Season') \
         .apply(lambda x: x.groupby('ConfAbbrev').TeamID.apply(list).to_dict()).to_dict()
 
-    for season, season_df in tqdm(iterable=_all_season_compact_results_df.groupby('Season'), leave=False,
+    for season, season_df in tqdm(iterable=_all_season_compact_results_df.groupby('Season'),
+                                  leave=False, total=_all_season_compact_results_df.Season.nunique(),
                                   desc='Calculating Historical Elo Ratings'):
 
         # We apply a regression to conference mean at the start of each season.
@@ -42,7 +43,7 @@ def elo(access: DataAccess) -> pd.Series:
         # Apply Elo to season games.
         for i, row in tqdm(iterable=season_df.iterrows(),
                            desc=f'Calculating Elo rankings for season {season}',
-                           leave=False):
+                           leave=False, total=len(season_df.index)):
             w_loc = row.WLoc
             r_w = team_elo.get(row.WTeamID, r_0)
             r_l = team_elo.get(row.LTeamID, r_0)
