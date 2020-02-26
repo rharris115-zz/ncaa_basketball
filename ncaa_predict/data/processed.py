@@ -119,7 +119,6 @@ def to_team_format(game_formatted_df: pd.DataFrame) -> pd.DataFrame:
     return team_formatted_df
 
 
-@memoize
 def possible_games(access: DataAccess) -> Iterable[Tuple[int, int, int]]:
     # Season, Seed, TeamID
     seeds_df = access.tourney_seeds_df()

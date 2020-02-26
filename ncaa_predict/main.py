@@ -14,7 +14,9 @@ def main():
         pred = EloTournamentPredictor()
         pred.train(team_features_df=team_features_df)
 
-        tourney_games = [(season, ta, tb) for season, ta, tb in possible_games(access)]
+        tourney_games = [(season, ta, tb)
+                         for season, ta, tb in possible_games(access)
+                         if season >= 2015]
 
         predictions_df = pd.DataFrame.from_records([
             {
