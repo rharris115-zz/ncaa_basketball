@@ -1,6 +1,7 @@
 import pandas as pd
 from collections import defaultdict
 from . import TournamentPredictor
+from tqdm import tqdm
 
 
 class EloTournamentPredictor(TournamentPredictor):
@@ -9,8 +10,10 @@ class EloTournamentPredictor(TournamentPredictor):
         self.end_of_season_ratings = defaultdict(dict)
 
     def train(self, team_features_df: pd.DataFrame):
-        for (season, team_id), season_features_df in team_features_df[team_features_df.Tourney == False] \
-                .groupby(['Season', 'TeamID']):
+        for (season, team_id), season_features_df in tqdm(
+                iterable=team_features_df[team_features_df.Tourney == False].groupby(['Season', 'TeamID']),
+                desc='Extracting end of regular season Elo ratings'
+        ):
             self.end_of_season_ratings[season][team_id] = season_features_df.Elo[-1]
 
     def estimate_probability(self, season: int, winning_team: int, losing_team: int) -> float:
