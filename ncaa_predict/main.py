@@ -1,5 +1,5 @@
 from ncaa_predict.data.access import mens_access, womens_access
-from ncaa_predict.features import registry
+from ncaa_predict.features import tf
 from ncaa_predict.models.elo_prediction import EloTournamentPredictor
 from ncaa_predict.data.processed import possible_games
 from ncaa_predict.evaluate import log_loss_error

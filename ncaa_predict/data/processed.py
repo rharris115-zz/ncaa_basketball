@@ -153,3 +153,12 @@ def possible_games(access: DataAccess) -> Iterable[Tuple[int, int, int]]:
             for tb in teams:
                 if ta < tb:
                     yield season, ta, tb
+
+
+def extract_player_playing_time(events_df: pd.DataFrame) -> pd.DataFrame:
+    # EventID, Season, DayNum, WTeamID, LTeamID, WFinalScore, LFinalScore, WCurrentScore, LCurrentScore,
+    # ElapsedSeconds, EventTeamID, EventPlayerID, EventType, EventSubType, X, Y, Area
+    sub_events_df = events_df[events_df.EventType == 'sub']
+    for (season, day, event_player_id), player_subs_df in sub_events_df.groupby(['Season', 'DayNum', 'EventPlayerID']):
+        pass
+    pass

@@ -17,7 +17,8 @@ class Features():
                 tqdm(iterable=self.features.items(), desc='Computing Features', leave=True)}
 
 
-registry = Features()
+tf = Features()
+pf = Features()
 
-from . import simple
-from . import elo
+from . import team_features
+from . import player_features
