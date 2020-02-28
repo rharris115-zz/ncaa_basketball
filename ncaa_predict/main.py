@@ -5,16 +5,11 @@ from ncaa_predict.data.processed import possible_games
 from ncaa_predict.evaluate import log_loss_error
 import pandas as pd
 from tqdm import tqdm
-import sqlite3
 
 
 def main():
     for access in (womens_access, mens_access):
-        d = registry.run(access=access)
-        team_features_df = pd.concat(d.values(), axis=1)
-
-        with sqlite3.connect(f'{access.prefix}TeamFeatures.db') as con:
-            team_features_df.to_sql(name='features', con=con)
+        team_features_df = pd.read_pickle(f'{access.prefix}TeamFeatures.pkl')
 
         pred = EloTournamentPredictor()
         pred.train(team_features_df=team_features_df)
