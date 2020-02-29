@@ -171,10 +171,12 @@ def player_scoring_df(access: DataAccess) -> pd.DataFrame:
     for season in range(2015, 2020):
         filtered_events = filtered_events_df('made1', 'made2', 'made3', 'miss1', 'miss2', 'miss3',
                                              access=access, season=season)
-        p = filtered_events.pivot_table(index=player_game_format_indices,
-                                        columns='EventType',
-                                        values='EventID',
-                                        aggfunc=np.count_nonzero).fillna(0)
-        p_scoring_df = p if p_scoring_df is None else p_scoring_df.append(p)
+        season_p_scoring_df = filtered_events.pivot_table(index=player_game_format_indices,
+                                                          columns='EventType',
+                                                          values='EventID',
+                                                          aggfunc=np.count_nonzero).fillna(0)
+        p_scoring_df = season_p_scoring_df \
+            if p_scoring_df is None \
+            else p_scoring_df.append(season_p_scoring_df)
 
     return p_scoring_df
