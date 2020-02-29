@@ -157,26 +157,19 @@ def possible_games(access: DataAccess) -> Iterable[Tuple[int, int, int]]:
                     yield season, ta, tb
 
 
-@memoize
-def filtered_events_df(*event_types: Sequence[str], access: DataAccess, season: int) -> pd.DataFrame:
-    events_df = access.events_df(season=season)
-    filtered_df = events_df[events_df.EventType.isin({*event_types})]
-    return filtered_df
-
-
-def player_scoring_df(access: DataAccess) -> pd.DataFrame:
+def player_stats_df(*event_types: Sequence[str], access: DataAccess) -> pd.DataFrame:
     # EventID, Season, DayNum, WTeamID, LTeamID, WFinalScore, LFinalScore, WCurrentScore, LCurrentScore,
     # ElapsedSeconds, EventTeamID, EventPlayerID, EventType, EventSubType, X, Y, Area
-    p_scoring_df = None
+    p_stats_df = None
     for season in range(2015, 2020):
-        filtered_events = filtered_events_df('made1', 'made2', 'made3', 'miss1', 'miss2', 'miss3',
-                                             access=access, season=season)
-        season_p_scoring_df = filtered_events.pivot_table(index=player_game_format_indices,
-                                                          columns='EventType',
-                                                          values='EventID',
-                                                          aggfunc=np.count_nonzero).fillna(0)
-        p_scoring_df = season_p_scoring_df \
-            if p_scoring_df is None \
-            else p_scoring_df.append(season_p_scoring_df)
+        events_df = access.events_df(season=season)
+        filtered_df = events_df[events_df.EventType.isin({*event_types})]
+        season_p_stats_df = filtered_df.pivot_table(index=player_game_format_indices,
+                                                    columns='EventType',
+                                                    values='EventID',
+                                                    aggfunc=np.count_nonzero).fillna(0)
+        p_stats_df = season_p_stats_df \
+            if p_stats_df is None \
+            else p_stats_df.append(season_p_stats_df)
 
-    return p_scoring_df
+    return p_stats_df
