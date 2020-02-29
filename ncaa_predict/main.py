@@ -1,4 +1,4 @@
-from ncaa_predict.data.access import mens_access, womens_access
+from ncaa_predict.data.access import mens_access, womens_access, team_features_df
 from ncaa_predict.features import tf
 from ncaa_predict.models.elo_prediction import EloTournamentPredictor
 from ncaa_predict.data.processed import possible_games
@@ -9,10 +9,10 @@ from tqdm import tqdm
 
 def main():
     for access in (mens_access, womens_access):
-        team_features_df = pd.read_pickle(f'{access.prefix}TeamFeatures.pkl')
+        tf_df = team_features_df(prefix=access.prefix)
 
         pred = EloTournamentPredictor()
-        pred.train(team_features_df=team_features_df)
+        pred.train(team_features_df=tf_df)
 
         tourney_games = [(season, ta, tb)
                          for season, ta, tb in possible_games(access)

@@ -5,9 +5,8 @@ from tqdm import tqdm
 
 from . import tf
 from ..data.access import DataAccess
-from ..data.processed import all_compact_team_results_df, team_format_indices
-from ..data.processed import all_season_compact_results_df
-from ..data.processed import to_team_format
+from ..data.processed import all_compact_team_results_df, team_format_indices, all_season_compact_results_df, \
+    to_team_format
 from ..utils import memoize
 
 

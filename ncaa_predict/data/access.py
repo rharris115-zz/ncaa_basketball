@@ -107,3 +107,13 @@ mens_access = DataAccess(zip_file='google-cloud-ncaa-march-madness-2020-division
                          prefix='M')
 womens_access = DataAccess(zip_file='google-cloud-ncaa-march-madness-2020-division-1-womens-tournament.zip',
                            prefix='W')
+
+
+@memoize
+def team_features_df(prefix: str) -> pd.DataFrame:
+    return pd.read_pickle(f'{prefix}TeamFeatures.pkl')
+
+
+@memoize
+def player_features_df(prefix: str) -> pd.DataFrame:
+    return pd.read_pickle(f'{prefix}PlayerFeatures.pkl')

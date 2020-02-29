@@ -6,6 +6,8 @@ import pandas as pd
 def main():
     for access in (mens_access, womens_access):
         player_features_df = pd.concat(pf.run(access=access).values(), axis=1)
+        player_features_df = player_features_df.fillna(0).astype(int)
+        player_features_df.reset_index('EventTeamID', inplace=True)
         player_features_df.to_pickle(f'{access.prefix}PlayerFeatures.pkl')
 
 
