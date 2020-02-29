@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def main():
-    for access in (womens_access, mens_access):
+    for access in (mens_access, womens_access):
         player_features_df = pd.concat(pf.run(access=access).values(), axis=1)
         player_features_df.to_pickle(f'{access.prefix}PlayerFeatures.pkl')
 

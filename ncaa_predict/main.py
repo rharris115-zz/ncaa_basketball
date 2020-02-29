@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 
 def main():
-    for access in (womens_access, mens_access):
+    for access in (mens_access, womens_access):
         team_features_df = pd.read_pickle(f'{access.prefix}TeamFeatures.pkl')
 
         pred = EloTournamentPredictor()

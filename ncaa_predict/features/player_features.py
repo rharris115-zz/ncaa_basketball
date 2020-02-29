@@ -2,10 +2,10 @@ import pandas as pd
 
 from . import pf
 from ..data.access import DataAccess
-from ..data.processed import extract_player_playing_time
+from ..data.processed import player_scoring_df
 
 
 @pf.register
-def playing_time(access: DataAccess) -> pd.DataFrame:
-    events_df = access.events_df(season=2015)
-    extract_player_playing_time(events_df=events_df)
+def player_scoring(access: DataAccess) -> pd.DataFrame:
+    p_scoring_df = player_scoring_df(access=access)
+    return p_scoring_df
