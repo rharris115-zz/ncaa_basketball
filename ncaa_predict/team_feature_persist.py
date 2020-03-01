@@ -1,11 +1,10 @@
 from ncaa_predict.data.access import mens_access, womens_access
-from ncaa_predict.features import tf, tpf
+from ncaa_predict.features import tf
 import pandas as pd
 
 
 def main():
     for access in (womens_access, mens_access):
-        test = tpf.run(access=access)
         team_features_df = pd.concat(tf.run(access=access).values(), axis=1)
         team_features_df.to_pickle(f'{access.prefix}TeamFeatures.pkl')
 
