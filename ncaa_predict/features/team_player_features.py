@@ -7,6 +7,25 @@ from tqdm import tqdm
 
 
 @tpf.register
+def assist_entropy(access: DataAccess) -> pd.DataFrame:
+    pf_df = player_features_df(prefix=access.prefix).reset_index()
+
+    def _entropy(df: pd.DataFrame) -> float:
+        total_assist = df.assist.sum()
+        score_fraction = df.assist[df.assist > 0] / total_assist
+        return -(score_fraction * np.log(score_fraction)).sum()
+
+    def _t(df: pd.DataFrame):
+        winning_df = df[df.EventTeamID == df.WTeamID]
+        losing_df = df[df.EventTeamID == df.LTeamID]
+        return pd.Series(dict(WAssistEntropy=_entropy(winning_df), LAssistEntropy=_entropy(losing_df)))
+
+    tqdm.pandas(desc="Calculating Assist Entropy")
+    assist_entropy_df = pf_df.groupby(game_format_indices).progress_apply(_t)
+    return to_team_format(game_formatted_df=assist_entropy_df)
+
+
+@tpf.register
 def scoring_entropy(access: DataAccess) -> pd.DataFrame:
     pf_df = player_features_df(prefix=access.prefix).reset_index()
     pf_df['Score'] = pf_df.made3 * 3 + pf_df.made2 * 2 + pf_df.made1

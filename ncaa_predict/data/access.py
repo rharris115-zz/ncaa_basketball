@@ -117,3 +117,8 @@ def team_features_df(prefix: str) -> pd.DataFrame:
 @memoize
 def player_features_df(prefix: str) -> pd.DataFrame:
     return pd.read_pickle(f'{prefix}PlayerFeatures.pkl')
+
+
+@memoize
+def team_player_features(prefix: str) -> pd.DataFrame:
+    return pd.read_pickle(f'{prefix}TeamPlayerFeatures.pkl')

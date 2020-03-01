@@ -1,14 +1,15 @@
-from ncaa_predict.data.access import mens_access, womens_access, team_features_df
-from ncaa_predict.features import tf
-from ncaa_predict.models.elo_prediction import EloTournamentPredictor
-from ncaa_predict.data.processed import possible_games
-from ncaa_predict.evaluate import log_loss_error
 import pandas as pd
 from tqdm import tqdm
+
+from ncaa_predict.data.access import mens_access, womens_access, team_features_df, team_player_features
+from ncaa_predict.data.processed import possible_games
+from ncaa_predict.evaluate import log_loss_error
+from ncaa_predict.models.elo_prediction import EloTournamentPredictor
 
 
 def main():
     for access in (mens_access, womens_access):
+        tpf_df = team_player_features(prefix=access.prefix)
         tf_df = team_features_df(prefix=access.prefix)
 
         pred = EloTournamentPredictor()

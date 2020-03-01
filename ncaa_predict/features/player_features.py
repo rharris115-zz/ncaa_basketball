@@ -1,8 +1,12 @@
+from typing import Sequence
+
+import numpy as np
 import pandas as pd
 
 from . import pf
 from ..data.access import DataAccess
-from ..data.processed import player_stats_df
+from ..data.processed import player_game_format_indices
+from ..utils import memoize
 
 # assist - an assist was credited on a made shot
 # block - a blocked shot was recorded
@@ -24,6 +28,12 @@ defensive_event_types = ['block', 'steal', 'reb', 'foul']
 
 
 @pf.register
+def player_game_info(access: DataAccess):
+    events_df = access.events_df(access)
+    pass
+
+
+@pf.register
 def player_scoring_stats_df(access: DataAccess) -> pd.DataFrame:
     return player_stats_df(*scoring_event_types, access=access)
 
@@ -36,3 +46,27 @@ def player_offensive_stats_df(access: DataAccess) -> pd.DataFrame:
 @pf.register
 def player_defensive_stats_df(access: DataAccess) -> pd.DataFrame:
     return player_stats_df(*defensive_event_types, access=access)
+
+
+@memoize
+def player_events_df(access: DataAccess, season: int) -> pd.DataFrame:
+    events_df = access.events_df(season=season)
+    pe_df = events_df[events_df.EventPlayerID.ne(0)]
+    return pe_df
+
+
+def player_stats_df(*event_types: Sequence[str], access: DataAccess) -> pd.DataFrame:
+    # EventID, Season, DayNum, WTeamID, LTeamID, WFinalScore, LFinalScore, WCurrentScore, LCurrentScore,
+    # ElapsedSeconds, EventTeamID, EventPlayerID, EventType, EventSubType, X, Y, Area
+    p_stats_df = None
+    for season in range(2015, 2020):
+        pe_df = player_events_df(access=access, season=season)
+        filtered_df = pe_df[pe_df.EventType.isin({*event_types})]
+        season_p_stats_df = filtered_df.pivot_table(index=player_game_format_indices + ['EventTeamID'],
+                                                    columns='EventType',
+                                                    values='EventID',
+                                                    aggfunc=np.count_nonzero).fillna(0)
+        p_stats_df = season_p_stats_df \
+            if p_stats_df is None \
+            else p_stats_df.append(season_p_stats_df)
+    return p_stats_df
