@@ -200,31 +200,6 @@ def tourney_season_compact_results_df(access: DataAccess) -> pd.DataFrame:
 
 
 @memoize
-def ground_truth_since_2015(access: DataAccess) -> pd.DataFrame:
-    compact_results_df = access.tourney_compact_results_df()
-
-    compact_results_df = compact_results_df[compact_results_df.Season >= 2015]
-
-    smaller_team_id_wins = compact_results_df[compact_results_df.WTeamID < compact_results_df.LTeamID]
-    larger_team_id_wins = compact_results_df[compact_results_df.WTeamID > compact_results_df.LTeamID]
-
-    _s_ground_truth_df = smaller_team_id_wins.Season.astype(str).str \
-        .cat([smaller_team_id_wins.WTeamID.astype(str), smaller_team_id_wins.LTeamID.astype(str)], sep='_') \
-        .rename('ID').to_frame()
-    _g_ground_truth_df = larger_team_id_wins.Season.astype(str).str \
-        .cat([larger_team_id_wins.LTeamID.astype(str), larger_team_id_wins.WTeamID.astype(str)], sep='_') \
-        .rename('ID').to_frame()
-
-    _s_ground_truth_df['Win'] = 1
-    _g_ground_truth_df['Win'] = 0
-
-    _ground_truth_df = _s_ground_truth_df.append(_g_ground_truth_df).set_index('ID')
-    _ground_truth_df.sort_index(inplace=True)
-
-    return _ground_truth_df
-
-
-@memoize
 def all_season_compact_results_df(access: DataAccess) -> pd.DataFrame:
     _regular_season_compact_results_df = regular_season_compact_results_df(access).copy()
     _tourney_season_compact_results_df = tourney_season_compact_results_df(access).copy()

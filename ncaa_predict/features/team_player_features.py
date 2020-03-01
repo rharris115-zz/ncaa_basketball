@@ -3,25 +3,30 @@ from ..data.access import DataAccess, player_features_df
 import pandas as pd
 from ..data.processed import to_team_format, game_format_indices
 import numpy as np
-from tqdm import tqdm
 
 
 @tpf.register
 def assist_entropy(access: DataAccess) -> pd.DataFrame:
     pf_df = player_features_df(prefix=access.prefix).reset_index()
 
-    def _entropy(df: pd.DataFrame) -> float:
-        total_assist = df.assist.sum()
-        score_fraction = df.assist[df.assist > 0] / total_assist
-        return -(score_fraction * np.log(score_fraction)).sum()
+    w_total_assists = pf_df[pf_df.EventTeamID == pf_df.WTeamID].groupby(game_format_indices) \
+        .assist.sum().rename('WTotalAssist')
+    l_total_assists = pf_df[pf_df.EventTeamID == pf_df.LTeamID].groupby(game_format_indices) \
+        .assist.sum().rename('LTotalAssist')
 
-    def _t(df: pd.DataFrame):
-        winning_df = df[df.EventTeamID == df.WTeamID]
-        losing_df = df[df.EventTeamID == df.LTeamID]
-        return pd.Series(dict(WAssistEntropy=_entropy(winning_df), LAssistEntropy=_entropy(losing_df)))
+    pf_df = pf_df.merge(w_total_assists, on=game_format_indices, how='outer')
+    pf_df = pf_df.merge(l_total_assists, on=game_format_indices, how='outer')
 
-    tqdm.pandas(desc="Calculating Assist Entropy")
-    assist_entropy_df = pf_df.groupby(game_format_indices).progress_apply(_t)
+    pf_df['WAssistFraction'] = np.where(pf_df.EventTeamID == pf_df.WTeamID, pf_df.assist / pf_df.WTotalAssist, 0)
+    pf_df['LAssistFraction'] = np.where(pf_df.EventTeamID == pf_df.LTeamID, pf_df.assist / pf_df.LTotalAssist, 0)
+
+    pf_df['WAssistEntropyContribution'] = -pf_df.WAssistFraction * np.log(pf_df.WAssistFraction)
+    pf_df['LAssistEntropyContribution'] = -pf_df.LAssistFraction * np.log(pf_df.LAssistFraction)
+
+    w_assist_entropy = pf_df.groupby(game_format_indices).WAssistEntropyContribution.sum().rename('WAssistEntropy')
+    l_assist_entropy = pf_df.groupby(game_format_indices).LAssistEntropyContribution.sum().rename('LAssistEntropy')
+
+    assist_entropy_df = pd.concat([w_assist_entropy, l_assist_entropy], axis=1)
     return to_team_format(game_formatted_df=assist_entropy_df)
 
 
@@ -30,16 +35,14 @@ def scoring_entropy(access: DataAccess) -> pd.DataFrame:
     pf_df = player_features_df(prefix=access.prefix).reset_index()
     pf_df['Score'] = pf_df.made3 * 3 + pf_df.made2 * 2 + pf_df.made1
 
-    def _entropy(df: pd.DataFrame) -> float:
-        total_score = df.Score.sum()
-        score_fraction = df.Score[df.Score > 0] / total_score
-        return -(score_fraction * np.log(score_fraction)).sum()
+    pf_df['WScoreFraction'] = np.where(pf_df.EventTeamID == pf_df.WTeamID, pf_df.Score / pf_df.WFinalScore, 0)
+    pf_df['LScoreFraction'] = np.where(pf_df.EventTeamID == pf_df.LTeamID, pf_df.Score / pf_df.LFinalScore, 0)
 
-    def _t(df: pd.DataFrame):
-        winning_df = df[df.EventTeamID == df.WTeamID]
-        losing_df = df[df.EventTeamID == df.LTeamID]
-        return pd.Series(dict(WScoringEntropy=_entropy(winning_df), LScoringEntropy=_entropy(losing_df)))
+    pf_df['WScoreEntropyContribution'] = -pf_df.WScoreFraction * np.log(pf_df.WScoreFraction)
+    pf_df['LScoreEntropyContribution'] = -pf_df.LScoreFraction * np.log(pf_df.LScoreFraction)
 
-    tqdm.pandas(desc="Calculating Scoring Entropy")
-    scoring_entropy_df = pf_df.groupby(game_format_indices).progress_apply(_t)
+    w_scoring_entropy = pf_df.groupby(game_format_indices).WScoreEntropyContribution.sum().rename('WScoringEntropy')
+    l_scoring_entropy = pf_df.groupby(game_format_indices).LScoreEntropyContribution.sum().rename('LScoringEntropy')
+
+    scoring_entropy_df = pd.concat([w_scoring_entropy, l_scoring_entropy], axis=1)
     return to_team_format(game_formatted_df=scoring_entropy_df)

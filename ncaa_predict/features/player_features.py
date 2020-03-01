@@ -26,11 +26,18 @@ scoring_event_types = ['made1', 'made2', 'made3', 'miss1', 'miss2', 'miss3']
 offensive_event_types = ['assist', 'turnover', 'fouled']
 defensive_event_types = ['block', 'steal', 'reb', 'foul']
 
+seasons = list(range(2015, 2020))
+
 
 @pf.register
 def player_game_info(access: DataAccess):
-    events_df = access.events_df(access)
-    pass
+    p_info_df = None
+    for season in seasons:
+        events_df = player_events_df(access=access, season=season)
+        season_p_info_df = events_df[player_game_format_indices + ['WFinalScore', 'LFinalScore', 'EventTeamID']] \
+            .groupby(player_game_format_indices).first()
+        p_info_df = season_p_info_df if p_info_df is None else p_info_df.append(season_p_info_df)
+    return p_info_df
 
 
 @pf.register
@@ -59,10 +66,10 @@ def player_stats_df(*event_types: Sequence[str], access: DataAccess) -> pd.DataF
     # EventID, Season, DayNum, WTeamID, LTeamID, WFinalScore, LFinalScore, WCurrentScore, LCurrentScore,
     # ElapsedSeconds, EventTeamID, EventPlayerID, EventType, EventSubType, X, Y, Area
     p_stats_df = None
-    for season in range(2015, 2020):
+    for season in seasons:
         pe_df = player_events_df(access=access, season=season)
         filtered_df = pe_df[pe_df.EventType.isin({*event_types})]
-        season_p_stats_df = filtered_df.pivot_table(index=player_game_format_indices + ['EventTeamID'],
+        season_p_stats_df = filtered_df.pivot_table(index=player_game_format_indices,
                                                     columns='EventType',
                                                     values='EventID',
                                                     aggfunc=np.count_nonzero).fillna(0)
