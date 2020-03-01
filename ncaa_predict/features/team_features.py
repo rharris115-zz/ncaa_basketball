@@ -24,18 +24,19 @@ def score_difference(access: DataAccess) -> pd.Series:
 @tf.register
 def win(access: DataAccess) -> pd.Series:
     ctr_df = all_compact_team_results_df(access)
-    return (((ctr_df.Score > ctr_df.OtherScore).astype(int) * 2) - 1).rename('Win')
+    return (ctr_df.Score > ctr_df.OtherScore).rename('Win')
 
 
 @tf.register
 def streak(access: DataAccess) -> pd.Series:
     _win_df = win(access).reset_index()
+    _win_df['WinNet'] = (_win_df.Win * 2) - 1
     _shifted_win_df = _win_df.shift(1)
 
-    _win_df['StreamNum'] = ((_win_df.Win != _shifted_win_df.Win)
+    _win_df['StreakNum'] = ((_win_df.WinNet != _shifted_win_df.WinNet)
                             | (_win_df.TeamID != _shifted_win_df.TeamID)
                             | (_win_df.Season != _shifted_win_df.Season)).cumsum()
-    _win_df['Streak'] = _win_df.groupby('StreamNum').Win.cumsum()
+    _win_df['Streak'] = _win_df.groupby('StreakNum').WinNet.cumsum()
     _win_df.set_index(team_format_indices, inplace=True)
     _win_df.sort_index(inplace=True)
     return _win_df.Streak
