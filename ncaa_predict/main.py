@@ -2,7 +2,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from ncaa_predict.data.access import mens_access, womens_access, team_features_df, team_player_features
-from ncaa_predict.data.processed import possible_games
+from ncaa_predict.data.processed import possible_games, team_format_indices
 from ncaa_predict.evaluate import log_loss_error
 from ncaa_predict.models.elo_prediction import EloTournamentPredictor
 
@@ -11,6 +11,10 @@ def main():
     for access in (mens_access, womens_access):
         tpf_df = team_player_features(prefix=access.prefix)
         tf_df = team_features_df(prefix=access.prefix)
+
+        t_comb_df = tpf_df.merge(tf_df, on=team_format_indices, how='right')
+
+        t_comb_df = t_comb_df[(t_comb_df.Elo > 1800) & (t_comb_df.OtherElo > 1800)]
 
         pred = EloTournamentPredictor()
         pred.train(team_features_df=tf_df)

@@ -10,9 +10,9 @@ from ..utils import memoize
 
 
 @tf.register
-def is_tourney(access: DataAccess) -> pd.Series:
+def info(access: DataAccess) -> pd.DataFrame:
     ctr_df = all_compact_team_results_df(access)
-    return ctr_df.Tourney.rename('Tourney')
+    return ctr_df
 
 
 @tf.register
@@ -87,7 +87,7 @@ elo_r_0 = 1300
 
 
 @tf.register
-def elo(access: DataAccess) -> pd.Series:
+def elo(access: DataAccess) -> pd.DataFrame:
     # https://fivethirtyeight.com/features/how-we-calculate-nba-elo-ratings/
     # https://www.ergosum.co/nate-silvers-nba-elo-algorithm/
 
@@ -148,13 +148,13 @@ def elo(access: DataAccess) -> pd.Series:
             w_elo.append(r_w_new)
             l_elo.append(r_l_new)
 
-    _elo_game_formatted_df = _all_season_compact_results_df[['Season', 'DayNum', 'WTeamID', 'LTeamID']].copy()
+    _elo_game_formatted_df = _all_season_compact_results_df[game_format_indices].copy()
     _elo_game_formatted_df['WElo'] = w_elo
     _elo_game_formatted_df['LElo'] = l_elo
 
     _elo_df = to_team_format(game_formatted_df=_elo_game_formatted_df)
 
-    return _elo_df.Elo
+    return _elo_df
 
 
 @memoize
