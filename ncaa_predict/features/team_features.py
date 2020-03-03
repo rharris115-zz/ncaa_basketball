@@ -11,7 +11,7 @@ from ..utils import memoize
 
 @tf.register
 def info(access: DataAccess) -> pd.DataFrame:
-    ctr_df = all_compact_team_results_df(access)
+    ctr_df = all_compact_team_results_df(access)[['Score', 'NumOT', 'Tourney']]
     return ctr_df
 
 
@@ -51,7 +51,6 @@ def home_advantage(access: DataAccess) -> pd.Series:
     return ctr_df.HomeAdvantage
 
 
-@tf.register
 @memoize
 def rest_days(access: DataAccess) -> pd.Series:
     ctr_df = all_compact_team_results_df(access).reset_index()
@@ -88,7 +87,7 @@ elo_r_0 = 1300
 
 
 @tf.register
-def elo(access: DataAccess) -> pd.DataFrame:
+def elo(access: DataAccess) -> pd.Series:
     # https://fivethirtyeight.com/features/how-we-calculate-nba-elo-ratings/
     # https://www.ergosum.co/nate-silvers-nba-elo-algorithm/
 
@@ -152,10 +151,11 @@ def elo(access: DataAccess) -> pd.DataFrame:
     _elo_game_formatted_df = _all_season_compact_results_df[game_format_indices].copy()
     _elo_game_formatted_df['WElo'] = w_elo
     _elo_game_formatted_df['LElo'] = l_elo
+    _elo_game_formatted_df.set_index(game_format_indices, inplace=True)
 
     _elo_df = to_team_format(game_formatted_df=_elo_game_formatted_df)
 
-    return _elo_df
+    return _elo_df.Elo
 
 
 @memoize

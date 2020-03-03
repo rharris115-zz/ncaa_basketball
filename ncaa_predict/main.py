@@ -12,7 +12,7 @@ def main():
         tpf_df = team_player_features(prefix=access.prefix)
         tf_df = team_features_df(prefix=access.prefix)
 
-        tf_df = tf_df.join(tpf_df, how='right')
+        tf_df = tf_df.join(tpf_df, how='inner')
 
         # elo_pred = EloTournamentPredictor()
         # elo_pred.train(team_features_df=tf_df)
