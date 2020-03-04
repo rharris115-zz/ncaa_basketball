@@ -27,9 +27,9 @@ def main():
         predictions_df = pd.DataFrame.from_records(
             {
                 'ID': f'{season}_{ta}_{tb}',
-                'Pred': pred.estimate_probability(season=season, winning_team=ta, losing_team=tb)
+                'Pred': pred.estimate_probability(season=season, team_a=ta, team_b=tb)
             }
-            for season, ta, tb in tqdm(iterable=tourney_games, desc='Recording predictions')
+            for season, ta, tb in tqdm(iterable=tourney_games, desc='Training Predictor')
         ).set_index('ID').sort_index()
 
         print(f'Log Loss: {log_loss_error(predictions_df=predictions_df, access=access)}')
