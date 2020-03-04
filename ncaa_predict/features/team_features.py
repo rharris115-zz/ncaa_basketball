@@ -69,18 +69,8 @@ def _rest_days_with_maximum(access: DataAccess, maximum: int) -> pd.Series:
 
 
 @tf.register
-def rest_days_14_max(access: DataAccess):
-    return _rest_days_with_maximum(access=access, maximum=14)
-
-
-@tf.register
 def rest_days_7_max(access: DataAccess):
     return _rest_days_with_maximum(access=access, maximum=7)
-
-
-@tf.register
-def rest_days_3_max(access: DataAccess):
-    return _rest_days_with_maximum(access=access, maximum=3)
 
 
 elo_r_0 = 1300

@@ -14,11 +14,11 @@ def main():
 
         tf_df = tf_df.join(tpf_df, how='inner')
 
-        # elo_pred = EloTournamentPredictor()
-        # elo_pred.train(team_features_df=tf_df)
+        # pred = EloTournamentPredictor()
+        # pred.train(team_features_df=tf_df)
 
-        lr_pred = LRTournamentPredictor()
-        lr_pred.train(team_features_df=tf_df)
+        pred = LRTournamentPredictor()
+        pred.train(team_features_df=tf_df)
 
         tourney_games = [(season, ta, tb)
                          for season, ta, tb in possible_games(access)
@@ -27,7 +27,7 @@ def main():
         predictions_df = pd.DataFrame.from_records(
             {
                 'ID': f'{season}_{ta}_{tb}',
-                'Pred': elo_pred.estimate_probability(season=season, winning_team=ta, losing_team=tb)
+                'Pred': pred.estimate_probability(season=season, winning_team=ta, losing_team=tb)
             }
             for season, ta, tb in tqdm(iterable=tourney_games, desc='Recording predictions')
         ).set_index('ID').sort_index()
