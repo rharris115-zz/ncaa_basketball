@@ -4,7 +4,9 @@ from collections import defaultdict
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from tqdm import tqdm
-import numpy as np
+from sklearn.neural_network import MLPClassifier
+
+tournament_game_index_labels = ['Season', 'TeamID', 'OtherTeamID']
 
 
 class TournamentPredictor(ABC):
@@ -14,33 +16,31 @@ class TournamentPredictor(ABC):
         pass
 
     @abstractmethod
-    def estimate_probability(self, season: int, team_a: int, team_b: int) -> float:
+    def estimate_probability(self, tourney_games_df: pd.DataFrame) -> pd.Series:
         pass
 
 
 class EloTournamentPredictor(TournamentPredictor):
 
-    def __init__(self):
-        self.end_of_season_ratings = defaultdict(dict)
-
     def train(self, team_features_df: pd.DataFrame):
-        for (season, team_id), season_features_df in tqdm(
-                iterable=team_features_df[team_features_df.Tourney == False].groupby(['Season', 'TeamID']),
-                desc='Extracting end of regular season Elo ratings'
-        ):
-            self.end_of_season_ratings[season][team_id] = season_features_df.Elo[-1]
+        self.end_of_regular_season_ratings = team_features_df[~team_features_df.Tourney] \
+            .reset_index().groupby(['Season', 'TeamID']).Elo.last()
 
-    def estimate_probability(self, season: int, team_a: int, team_b: int) -> float:
-        r_w = self.end_of_season_ratings[season][team_a]
-        r_l = self.end_of_season_ratings[season][team_b]
-        win_probability = 1 / (1 + 10 ** ((r_l - r_w) / 400))
+    def estimate_probability(self, tourney_games_df: pd.DataFrame) -> pd.Series:
+        team_elo = tourney_games_df.merge(self.end_of_regular_season_ratings,
+                                          on=['Season', 'TeamID'],
+                                          how='left').set_index(tournament_game_index_labels).Elo
+
+        other_team_elo = tourney_games_df.merge(self.end_of_regular_season_ratings,
+                                                left_on=['Season', 'OtherTeamID'],
+                                                right_on=['Season', 'TeamID'],
+                                                how='left').set_index(tournament_game_index_labels).Elo
+
+        win_probability = (1 / (1 + 10 ** ((other_team_elo - team_elo) / 400))).rename('Pred')
         return win_probability
 
 
 class LRTournamentPredictor(TournamentPredictor):
-
-    def __init__(self):
-        pass
 
     def train(self, team_features_df: pd.DataFrame):
         self.last_games = team_features_df[~team_features_df.Tourney].reset_index().groupby(['TeamID', 'Season']).last()
@@ -60,29 +60,78 @@ class LRTournamentPredictor(TournamentPredictor):
 
         self.lr = LogisticRegression(random_state=0, max_iter=1e6).fit(x, y)
 
-    def estimate_probability(self, season: int, team_a: int, team_b: int) -> float:
-        team_a_last_result = self.last_games.loc[(team_a, season)]
-        team_b_last_result = self.last_games.loc[(team_b, season)]
+    def estimate_probability(self, tourney_games_df: pd.DataFrame) -> pd.Series:
+        team_last_features_df = tourney_games_df.merge(self.last_games.drop(columns='OtherTeamID'),
+                                                       on=['Season', 'TeamID'],
+                                                       how='left').set_index(tournament_game_index_labels)
 
-        # 'p_Score', 'p_NumOT', 'p_ScoreDifference', 'p_Streak', 'p_HomeAdvantage', 'p_AssistEntropy', 'p_ScoringEntropy'
+        other_team_last_features_df = tourney_games_df.merge(self.last_games.drop(columns='OtherTeamID'),
+                                                             left_on=['Season', 'OtherTeamID'],
+                                                             right_on=['Season', 'TeamID'],
+                                                             how='left').set_index(tournament_game_index_labels)
 
-        to_drop = ['OtherTeamID', 'DayNum', 'Tourney', 'Win', 'RestDaysMax7']
-        team_a_last_result = team_a_last_result.drop(to_drop)
-        team_b_last_result = team_b_last_result.drop(to_drop)
+        to_drop = ['DayNum', 'Tourney', 'Win', 'RestDaysMax7']
+        team_last_features_df = team_last_features_df.drop(columns=to_drop)
+        other_team_last_features_df = other_team_last_features_df.drop(columns=to_drop)
 
-        a_x = team_a_last_result.rename({name: f'p_{name}' for name in team_a_last_result.index})
-        b_x = team_b_last_result.rename({name: f'po_{name}' for name in team_a_last_result.index})
+        team_last_features_df.rename(columns=lambda c: f'p_{c}', inplace=True)
+        other_team_last_features_df.rename(columns=lambda c: f'po_{c}', inplace=True)
 
-        x = a_x.append(b_x)
+        x = team_last_features_df.join(other_team_last_features_df)
         x['HomeAdvantage'] = 0
         x['p_EloAdv'] = x.p_Elo - x.po_Elo
-        x = x.drop(['p_Elo', 'po_Elo'])
-        x = x.to_frame().transpose()
+        x = x.drop(columns=['p_Elo', 'po_Elo'])
         x = x.reindex(sorted(x.columns), axis=1)
 
         p = self.lr.predict_proba(x)
-        # print(f'p_Elo: {team_a_last_result.Elo}, po_Elo: {team_b_last_result.Elo}, p: {p[0, 1]}')
-        return p[0, 1]
+        return pd.Series(index=x.index, name='Pred', data=p[:, 1])
+
+
+class MLPTournamentPredictor(TournamentPredictor):
+
+    def train(self, team_features_df: pd.DataFrame):
+        self.last_games = team_features_df[~team_features_df.Tourney].reset_index().groupby(['TeamID', 'Season']).last()
+
+        x, y = training_data_df(team_features_df=team_features_df)
+
+        x['p_EloAdv'] = x.p_Elo - x.po_Elo
+        # x['RestDaysAdv'] = x.RestDaysMax7 - x.OtherRestDaysMax7
+
+        x.drop(columns=['p_Win', 'po_Win', 'p_Elo', 'po_Elo', 'p_RestDaysMax7', 'po_RestDaysMax7',
+                        'RestDaysMax7', 'OtherRestDaysMax7', 'Tourney', 'p_Tourney', 'po_Tourney'], inplace=True)
+
+        x = x.reindex(sorted(x.columns), axis=1)
+
+        x = x[x.index.get_level_values('TeamID') < x.index.get_level_values('OtherTeamID')]
+        y = y[y.index.get_level_values('TeamID') < y.index.get_level_values('OtherTeamID')]
+
+        self.mlp = MLPClassifier(hidden_layer_sizes=(35, 35), verbose=True, max_iter=1000).fit(x, y)
+
+    def estimate_probability(self, tourney_games_df: pd.DataFrame) -> pd.Series:
+        team_last_features_df = tourney_games_df.merge(self.last_games.drop(columns='OtherTeamID'),
+                                                       on=['Season', 'TeamID'],
+                                                       how='left').set_index(tournament_game_index_labels)
+
+        other_team_last_features_df = tourney_games_df.merge(self.last_games.drop(columns='OtherTeamID'),
+                                                             left_on=['Season', 'OtherTeamID'],
+                                                             right_on=['Season', 'TeamID'],
+                                                             how='left').set_index(tournament_game_index_labels)
+
+        to_drop = ['DayNum', 'Tourney', 'Win', 'RestDaysMax7']
+        team_last_features_df = team_last_features_df.drop(columns=to_drop)
+        other_team_last_features_df = other_team_last_features_df.drop(columns=to_drop)
+
+        team_last_features_df.rename(columns=lambda c: f'p_{c}', inplace=True)
+        other_team_last_features_df.rename(columns=lambda c: f'po_{c}', inplace=True)
+
+        x = team_last_features_df.join(other_team_last_features_df)
+        x['HomeAdvantage'] = 0
+        x['p_EloAdv'] = x.p_Elo - x.po_Elo
+        x = x.drop(columns=['p_Elo', 'po_Elo'])
+        x = x.reindex(sorted(x.columns), axis=1)
+
+        p = self.mlp.predict_proba(x)
+        return pd.Series(index=x.index, name='Pred', data=p[:, 1])
 
 
 def training_data_df(team_features_df: pd.DataFrame):
