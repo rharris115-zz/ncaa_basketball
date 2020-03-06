@@ -105,7 +105,7 @@ class MLPTournamentPredictor(TournamentPredictor):
         x = x[x.index.get_level_values('TeamID') < x.index.get_level_values('OtherTeamID')]
         y = y[y.index.get_level_values('TeamID') < y.index.get_level_values('OtherTeamID')]
 
-        self.mlp = MLPClassifier(hidden_layer_sizes=(35, 35), verbose=True, max_iter=1000).fit(x, y)
+        self.mlp = MLPClassifier(hidden_layer_sizes=(25, 25), max_iter=1000).fit(x, y)
 
     def estimate_probability(self, tourney_games_df: pd.DataFrame) -> pd.Series:
         team_last_features_df = tourney_games_df.merge(self.last_games.drop(columns='OtherTeamID'),

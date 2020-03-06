@@ -3,13 +3,10 @@
 /google-cloud-ncaa-march-madness-2020-division-1-mens-tournament/
 /google-cloud-ncaa-march-madness-2020-division-1-womens-tournament/
 /.idea/
-/WComparisonStage1.csv
-/WSubmissionStage1.csv
-/MComparisonStage1.csv
-/MSubmissionStage1.csv
 /MTeamFeatures.pkl
 /WTeamFeatures.pkl
 /MPlayerFeatures.pkl
 /WPlayerFeatures.pkl
 /MTeamPlayerFeatures.pkl
 /WTeamPlayerFeatures.pkl
+/out/
