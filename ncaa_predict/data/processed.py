@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Iterable, Tuple
 
 import pandas as pd
@@ -57,6 +58,50 @@ def possible_games(access: DataAccess) -> Iterable[Tuple[int, int, int]]:
             for tb in teams:
                 if ta < tb:
                     yield season, ta, tb
+
+
+def slot_paths_df(access: DataAccess):
+    slots = access.tourney_slots_df()
+
+    def _paths(season_slots_df: pd.DataFrame):
+        seed_segments = {**{row.StrongSeed: row.Slot for idx, row in season_slots_df.iterrows()},
+                         **{row.WeakSeed: row.Slot for idx, row in season_slots_df.iterrows()}}
+
+        initial_seeds = sorted({*seed_segments.keys()} - {*seed_segments.values()})
+
+        def _find_slots(slot_or_seed: str) -> Iterable[str]:
+            if slot_or_seed in seed_segments:
+                slot = seed_segments[slot_or_seed]
+                yield slot
+                yield from _find_slots(slot_or_seed=slot)
+
+        paths = {seed: list(_find_slots(slot_or_seed=seed)) for seed in sorted(initial_seeds)}
+
+        season_paths_df = pd.DataFrame.from_records(({'Seed': seed, **{f'championship_minus_{i}': slot
+                                                                       for i, slot in enumerate(reversed(path))}}
+                                                     for seed, path in paths.items()),
+                                                    index='Seed')
+
+        return season_paths_df
+
+    paths_df = slots.groupby('Season').apply(_paths).reset_index()
+
+    return paths_df
+
+
+@memoize
+def paths_to_championship_df(access: DataAccess) -> pd.DataFrame:
+    paths_df = slot_paths_df(access=access)
+    seeds = access.tourney_seeds_df()
+    paths_2_championship_df = paths_df.merge(seeds, on=['Season', 'Seed'], how='outer').set_index(['Season', 'TeamID'])
+    return paths_2_championship_df
+
+
+@memoize
+def infer_slot_dates(access: DataAccess):
+    tourney_compact_results_df = access.tourney_compact_results_df()[['Season', 'DayNum', 'WTeamID', 'LTeamID']].copy()
+    paths_2_championship_df = paths_to_championship_df(access=access)
+    pass
 
 
 @memoize

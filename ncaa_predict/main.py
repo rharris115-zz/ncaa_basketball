@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 from ncaa_predict.data.access import mens_access, womens_access, team_features_df, team_player_features
-from ncaa_predict.data.processed import possible_games
+from ncaa_predict.data.processed import possible_games, infer_slot_dates
 from ncaa_predict.evaluate import log_loss_error
 from ncaa_predict.models.prediction import tournament_game_index_labels, EloTournamentPredictor, LRTournamentPredictor, \
     MLPTournamentPredictor
@@ -21,6 +21,9 @@ def main():
             for season, team_id, other_team_id in possible_games(access)
             if season >= 2015
         )
+
+        slot_dates = infer_slot_dates(access=access)
+
         for pred in (
                 EloTournamentPredictor(),
                 LRTournamentPredictor(),
