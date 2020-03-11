@@ -99,11 +99,11 @@ def paths_to_championship_df(access: DataAccess) -> pd.DataFrame:
 @memoize
 def infer_slot_dates(access: DataAccess):
     tourney_compact_results_df = access.tourney_compact_results_df()[['Season', 'DayNum', 'WTeamID', 'LTeamID']].copy()
-    paths_by_season_and_team = paths_to_championship_df(access=access).path.to_dict()
+    paths_2_championship_df = paths_to_championship_df(access=access).path.to_dict()
 
     def _slot(row: pd.Series):
-        w_path = paths_by_season_and_team[(row.Season, row.WTeamID)]
-        l_path = paths_by_season_and_team[(row.Season, row.LTeamID)]
+        w_path = paths_2_championship_df[(row.Season, row.WTeamID)]
+        l_path = paths_2_championship_df[(row.Season, row.LTeamID)]
         for slot in w_path:
             if slot in l_path:
                 return slot
