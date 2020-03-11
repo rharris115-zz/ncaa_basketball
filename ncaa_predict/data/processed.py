@@ -77,8 +77,7 @@ def slot_paths_df(access: DataAccess):
 
         paths = {seed: list(_find_slots(slot_or_seed=seed)) for seed in sorted(initial_seeds)}
 
-        season_paths_df = pd.DataFrame.from_records(({'Seed': seed, **{f'championship_minus_{i}': slot
-                                                                       for i, slot in enumerate(reversed(path))}}
+        season_paths_df = pd.DataFrame.from_records(({'Seed': seed, 'path': path}
                                                      for seed, path in paths.items()),
                                                     index='Seed')
 
@@ -100,8 +99,19 @@ def paths_to_championship_df(access: DataAccess) -> pd.DataFrame:
 @memoize
 def infer_slot_dates(access: DataAccess):
     tourney_compact_results_df = access.tourney_compact_results_df()[['Season', 'DayNum', 'WTeamID', 'LTeamID']].copy()
-    paths_2_championship_df = paths_to_championship_df(access=access)
-    pass
+    paths_by_season_and_team = paths_to_championship_df(access=access).path.to_dict()
+
+    def _slot(row: pd.Series):
+        w_path = paths_by_season_and_team[(row.Season, row.WTeamID)]
+        l_path = paths_by_season_and_team[(row.Season, row.LTeamID)]
+        for slot in w_path:
+            if slot in l_path:
+                return slot
+        return None
+
+    tourney_compact_results_df['Slot'] = tourney_compact_results_df.apply(_slot, axis=1)
+    slot_dates_df = tourney_compact_results_df.drop(columns=['WTeamID', 'LTeamID'])
+    return slot_dates_df
 
 
 @memoize

@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
-from collections import defaultdict
+from typing import Tuple
 
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from tqdm import tqdm
 from sklearn.neural_network import MLPClassifier
 
 tournament_game_index_labels = ['Season', 'TeamID', 'OtherTeamID']
@@ -134,7 +133,7 @@ class MLPTournamentPredictor(TournamentPredictor):
         return pd.Series(index=x.index, name='Pred', data=p[:, 1])
 
 
-def training_data_df(team_features_df: pd.DataFrame):
+def training_data_df(team_features_df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
     tf_df = team_features_df.reset_index()
     tf_df.set_index(['Season', 'DayNum', 'TeamID', 'OtherTeamID'], inplace=True)
     tf_df.sort_index(inplace=True)
